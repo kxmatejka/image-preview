@@ -5,15 +5,17 @@ React image preview
 
 Simple canvas image preview
 
+![demo.gif](https://github.com/kxmatejka/image-preview/blob/master/demo/demo.gif?raw=true)
+
 # Demo or development
 
 ```
 git clone xy
 npm install
-npm run
+npm run start
 ```
 
-and visit localhost:3000/demo/
+and visit [localhost:3000/demo/](http://localhost:3000/demo/)
 
 # Next goals
 
