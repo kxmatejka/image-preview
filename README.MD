@@ -10,7 +10,7 @@ Simple canvas image preview
 # Demo or development
 
 ```
-git clone xy
+git clone https://github.com/kxmatejka/image-preview
 npm install
 npm run start
 ```
