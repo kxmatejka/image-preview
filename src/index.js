@@ -7,9 +7,8 @@ export default class ImagePreview extends Component {
   constructor (props) {
     super(props)
 
-    this.handleLoadFile = this.handleLoadFile.bind(this)
     this.fileReader = new FileReader()
-    this.fileReader.addEventListener('load', this.handleLoadFile)
+    this.fileReader.addEventListener('load', this.handleLoadFile.bind(this))
   }
 
   /**
@@ -32,7 +31,7 @@ export default class ImagePreview extends Component {
    * Draw image
    */
   handleLoadFile () {
-    const canvasContext = this.refs.canvas.getContext('2d')
+    const canvasContext = this.canvas.getContext('2d')
     const image = new Image()
 
     image.onload = () => {
@@ -63,7 +62,8 @@ export default class ImagePreview extends Component {
     } = this.props
 
     return (
-      <canvas ref="canvas" width={width} height={height} />
+      <canvas ref={(canvas) => {this.canvas = canvas}}
+              width={width} height={height} />
     )
   }
 }
