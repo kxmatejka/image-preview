@@ -17,6 +17,8 @@ export default class Example extends Component {
     })
   }
 
+
+
   render () {
     return (
       <div>
@@ -25,7 +27,10 @@ export default class Example extends Component {
           <label htmlFor="example" style={{display: 'block'}}>Select a file</label>
           <input type="file" id="example" onChange={this.handleChangeFile}/>
         </fieldset>
-        <ImagePreview file={this.state.files[0]} width={500} height={500} />
+        <ImagePreview file={this.state.files[0]}
+                      width={500} height={500}
+                      style={{background: '#eee'}}
+                      onError={() => {alert('error')}} />
       </div>
     )
   }

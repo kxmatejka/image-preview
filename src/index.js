@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
 
 export default class ImagePreview extends Component {
-  /**
-   * @param props
-   */
+  static defaultProps = {
+    width: 0,
+    height: 0,
+    enabledFormats: ['jpeg', 'png', 'gif', 'webp']
+  }
+
   constructor (props) {
     super(props)
 
@@ -11,24 +14,24 @@ export default class ImagePreview extends Component {
     this.fileReader.addEventListener('load', this.handleLoadFile.bind(this))
   }
 
-  /**
-   * Cleanup
-   */
+  componentDidMount () {
+    this.setDefaultCssToCanvas()
+  }
+
   componentWillUnmount () {
     this.fileReader.removeAllListeners()
   }
 
-  /**
-   * When component receive new file
-   *
-   * @param nextProps
-   */
   componentWillReceiveProps (nextProps) {
-    this.fileReader.readAsDataURL(nextProps.file)
+    if (this.isFormatEnabled(nextProps.file.type)) {
+      this.fileReader.readAsDataURL(nextProps.file)
+    } else if (this.props.onError) {
+      this.props.onError()
+    }
   }
 
   /**
-   * Draw image
+   * Draw an image
    */
   handleLoadFile () {
     const canvasContext = this.canvas.getContext('2d')
@@ -50,6 +53,31 @@ export default class ImagePreview extends Component {
       canvasContext.drawImage(image, 0, 0, scaledWidth, scaledHeight)
     }
     image.src = this.fileReader.result
+  }
+
+  /**
+   * @param requestedFormat
+   * @returns {boolean}
+   */
+  isFormatEnabled (requestedFormat) {
+    let result = false
+    if (requestedFormat.includes('image')) {
+      const suffixOnly = requestedFormat.substr(6, requestedFormat.length)
+      result = this.props.enabledFormats.includes(suffixOnly)
+    }
+
+    return result
+  }
+
+  /**
+   * Merge css object from style properties with canvas css
+   */
+  setDefaultCssToCanvas () {
+    if (this.props.style instanceof Object) {
+      Object.keys(this.props.style).map(key => {
+        this.canvas.style[key] = this.props.style[key]
+      })
+    }
   }
 
   /**
