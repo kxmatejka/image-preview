@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ValidationError from './ValidationError'
 
 export default class ImagePreview extends Component {
   static defaultProps = {
@@ -23,10 +24,14 @@ export default class ImagePreview extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    if (this.isFormatEnabled(nextProps.file.type)) {
-      this.fileReader.readAsDataURL(nextProps.file)
-    } else if (this.props.onError) {
-      this.props.onError()
+    const file = nextProps.file
+
+    if (!this.isFormatAllowed(file.type)) {
+      this.invokeError('unsupported format', file.type)
+    } else if (!this.isSizeAllowed(file.size)) {
+      this.invokeError('file is too large', file.size)
+    } else {
+      this.fileReader.readAsDataURL(file)
     }
   }
 
@@ -38,19 +43,23 @@ export default class ImagePreview extends Component {
     const image = new Image()
 
     image.onload = () => {
-      const ratio = image.width / image.height
-      let scaledWidth, scaledHeight
-
-      if (image.width > image.height) {
-        scaledWidth = canvasContext.canvas.width
-        scaledHeight = scaledWidth / ratio
+      if (!this.isDimensionAllowed(image.width, image.height)) {
+        this.invokeError('maximal dimensions violated', `${image.width}x${image.height}`)
       } else {
-        scaledHeight = canvasContext.canvas.height
-        scaledWidth = scaledHeight * ratio
-      }
+        const ratio = image.width / image.height
+        let scaledWidth, scaledHeight
 
-      canvasContext.clearRect(0, 0, canvasContext.canvas.width, canvasContext.canvas.height)
-      canvasContext.drawImage(image, 0, 0, scaledWidth, scaledHeight)
+        if (image.width > image.height) {
+          scaledWidth = canvasContext.canvas.width
+          scaledHeight = scaledWidth / ratio
+        } else {
+          scaledHeight = canvasContext.canvas.height
+          scaledWidth = scaledHeight * ratio
+        }
+
+        canvasContext.clearRect(0, 0, canvasContext.canvas.width, canvasContext.canvas.height)
+        canvasContext.drawImage(image, 0, 0, scaledWidth, scaledHeight)
+      }
     }
     image.src = this.fileReader.result
   }
@@ -59,7 +68,7 @@ export default class ImagePreview extends Component {
    * @param requestedFormat
    * @returns {boolean}
    */
-  isFormatEnabled (requestedFormat) {
+  isFormatAllowed (requestedFormat) {
     let result = false
     if (requestedFormat.includes('image')) {
       const suffixOnly = requestedFormat.substr(6, requestedFormat.length)
@@ -70,6 +79,26 @@ export default class ImagePreview extends Component {
   }
 
   /**
+   * @param fileSize
+   * @returns {boolean}
+   */
+  isSizeAllowed (fileSize) {
+    return (this.props.imageMaxSize !== undefined && fileSize <= this.props.imageMaxSize)
+  }
+
+  /**
+   * @param width
+   * @param height
+   * @returns {boolean}
+   */
+  isDimensionAllowed (width, height) {
+    return (
+      (this.props.imageMaxWidth !== undefined && width <= this.props.imageMaxWidth) &&
+      (this.props.imageMaxHeight !== undefined && height <= this.props.imageMaxHeight)
+    )
+  }
+
+  /**
    * Merge css object from style properties with canvas css
    */
   setDefaultCssToCanvas () {
@@ -77,6 +106,16 @@ export default class ImagePreview extends Component {
       Object.keys(this.props.style).map(key => {
         this.canvas.style[key] = this.props.style[key]
       })
+    }
+  }
+
+  /**
+   * @param message
+   * @param value
+   */
+  invokeError (message, value) {
+    if (this.props.onError) {
+      this.props.onError(new ValidationError(message, value), this.canvas)
     }
   }
 
